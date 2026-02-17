@@ -1,6 +1,6 @@
-from grid import Grid, LevelBuilder
+from src.grid import Grid, LevelBuilder
 from visualizer import GridVisualizer
-from autoplayer import Autoplayer
+from src.autoplayer import Autoplayer
 
 
 def test_einfaches_level():

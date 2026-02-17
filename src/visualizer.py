@@ -1,7 +1,7 @@
 import pygame
 import os
 import sys
-from grid import (
+from src.grid import (
     Grid, LevelBuilder, LevelValidator,
     LUFT, BODEN, PLATTFORM, START, ZIEL
 )

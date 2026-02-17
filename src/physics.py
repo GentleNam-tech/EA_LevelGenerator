@@ -1,5 +1,5 @@
 from typing import Tuple, List, Optional
-from grid import Grid
+from src.grid import Grid
 from enum import Enum
 
 # oben links ist (0,0) wegen numpy
