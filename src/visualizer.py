@@ -168,6 +168,7 @@ class GridVisualizer:
 
     def screenshot_speichern(self, dateiname: str = "level_screenshot.png"):
         ordner = "screenshots"
+        os.makedirs(ordner, exist_ok=True)
         pfad = os.path.join(ordner, dateiname)
         pygame.image.save(self.fenster, pfad)
         print(f"Screenshot gespeichert: {pfad}")
