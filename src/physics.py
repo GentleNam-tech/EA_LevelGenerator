@@ -12,9 +12,9 @@ RUNTER = +1
 LAUFKOSTEN = 1
 SPRINGKOSTEN = 5
 FALLKOSTEN = 1
-SPRUNG_HOEHE = 3  # kann max. 3 Tiles hoch springen
-SPRUNG_WEITE = 4  # kann max. 4 Tiles weit springen
-FALL_DISTANZ_MAX = 10  # maximaler Fall
+SPRUNG_HOEHE = 3
+SPRUNG_WEITE = 4
+FALL_DISTANZ_MAX = 10
 
 
 class BewegungTyp(Enum):
