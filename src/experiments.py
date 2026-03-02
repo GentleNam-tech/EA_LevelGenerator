@@ -233,7 +233,7 @@ class Experiment:
 
             # Header
             writer.writerow([
-                'Name'
+                'Name',
                 'Population',
                 'Crossover-Rate',
                 'Mutation-Rate',
@@ -377,7 +377,7 @@ class Experiment:
             name = exp['name']
             level_list = exp['zwischen_level']
             for j in range(len(level_list)):
-                filepath = os.path.join(self.output, f"bestes_level_{name}_{j}.txt")
+                filepath = os.path.join(self.output, f"zwischen_level_{name}_{j}.txt")
                 level = level_list[j]
                 zwischen_level = LevelBuilder.matrix_grid(level)
                 with open(filepath, 'w') as f:
