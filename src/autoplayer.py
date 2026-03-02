@@ -1,7 +1,7 @@
 from typing import Optional, List
 import heapq
 from grid import Grid
-from physics import PhysikEngine, Position, Bewegung
+from physics import PhysikEngine, Position, Bewegung, BewegungTyp
 
 
 class Pfad:
@@ -10,6 +10,8 @@ class Pfad:
         self.positionen = positionen
         self.bewegungen = bewegungen
         self.laenge = len(positionen)
+
+        self.anzahl_spruenge = sum(1 for bew in bewegungen if bew.typ == BewegungTyp.SPRINGEN)
 
     def ist_leer(self) -> bool:
         return len(self.positionen) == 0
@@ -128,7 +130,6 @@ class Autoplayer:
         nachbar_nodes = []
 
         moegliche_bewegungen = self.physik.finde_alle_nachbarn(current.position)
-        print(moegliche_bewegungen)
 
         for bewegung in moegliche_bewegungen:
             neue_g_kosten = current.g_kosten + bewegung.kosten
@@ -161,10 +162,6 @@ class Autoplayer:
         if pfad is None:
             pfad = self.letzter_pfad
 
-        anzahl_sprunge = 0
-        if pfad is not None:
-            anzahl_spruenge = sum(1 for bew in pfad.bewegungen if bew.typ == "springen")
-
         if pfad is None or pfad.ist_leer():
             return {"loesbar": False, "pfad_laenge": 0, "anzahl_spruenge": 0, "evaluierte_nodes": self.anzahl_evaluierte_nodes}
-        return {"loesbar": True, "pfad_laenge": pfad.laenge, "anzahl_spruenge": anzahl_spruenge, "evaluierte_nodes": self.anzahl_evaluierte_nodes}
+        return {"loesbar": True, "pfad_laenge": pfad.laenge, "anzahl_spruenge": pfad.anzahl_spruenge, "evaluierte_nodes": self.anzahl_evaluierte_nodes}

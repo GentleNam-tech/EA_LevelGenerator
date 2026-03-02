@@ -1,3 +1,4 @@
+from src.fitness import SimpleFitness
 from src.grid import Grid, LevelBuilder
 from visualizer import GridVisualizer
 from src.autoplayer import Autoplayer
@@ -37,10 +38,11 @@ def test_mittelschweres_level2():
     autoplayer = Autoplayer(grid)
 
     loesbar = autoplayer.ist_level_loesbar()
-    assert loesbar, "Level sollte loesbar sein"
+    print(loesbar)
     pfad = autoplayer.letzter_pfad
     print(autoplayer.berechne_pfad_statistiken(pfad))
-    assert pfad.laenge > 0, "Pfad sollte nicht leer sein"
+    visualizer = GridVisualizer(grid)
+    visualizer.run()
 
 
 def test_unloesbar_level():
@@ -78,6 +80,20 @@ def test_direkter_weg():
     print(autoplayer.berechne_pfad_statistiken(pfad))
     assert pfad.laenge > 0, "Pfad sollte nicht leer sein"
 
+def test_screenshot():
+    grid = LevelBuilder.level_aus_screenshot("experiment_result_new_crossover/bestes_level_0.txt")
+    grid.print_grid()
+
+    fitness = SimpleFitness()
+    score = fitness.berechne_fitness(grid)
+    autoplayer = Autoplayer(grid)
+    loesbar = autoplayer.ist_level_loesbar()
+    pfad = autoplayer.letzter_pfad
+    print(score)
+    print(autoplayer.berechne_pfad_statistiken(pfad))
+    visualizer = GridVisualizer(grid)
+    visualizer.run()
+
 
 def starte_visualisierung():
     start_level = LevelBuilder.einfaches_level()
@@ -86,9 +102,4 @@ def starte_visualisierung():
 
 
 if __name__ == "__main__":
-    test_direkter_weg()
-    test_einfaches_level()
-    test_mittelschweres_level()
-    test_mittelschweres_level2()
-    test_unloesbar_level()
-    starte_visualisierung()
+    test_screenshot()

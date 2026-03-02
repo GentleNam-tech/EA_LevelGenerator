@@ -218,6 +218,46 @@ class LevelBuilder:
 
         return g
 
+    @staticmethod
+    def matrix_grid(matrix: np.ndarray) -> Grid:
+        hoehe, breite = matrix.shape
+        g = Grid(breite, hoehe)
+        g.tiles = matrix.copy().astype(int)
+
+        return g
+
+    @staticmethod
+    def level_aus_screenshot(dateipfad: str) -> Grid:
+        g = Grid()
+        with open(dateipfad, "r", encoding="utf-8") as f:
+            zeilen = f.readlines()
+
+        layout = []
+        for z in zeilen:
+            z = z.rstrip("\n")
+            if z.startswith("Beste Fitness"):
+                continue
+            if not z.strip():
+                continue
+            layout.append(z)
+
+        for y, row in enumerate(layout):
+            for x, char in enumerate(row):
+                if char == '#':
+                    g.set_tile(x, y, BODEN)
+                elif char == '=':
+                    g.set_tile(x, y, PLATTFORM)
+                elif char == 'S':
+                    g.set_tile(x, y, START)
+                elif char == 'Z':
+                    g.set_tile(x, y, ZIEL)
+                elif char == '.':
+                    g.set_tile(x, y, LUFT)
+                else:
+                    g.set_tile(x, y, LUFT)
+
+        return g
+
 class LevelValidator:
 
     @staticmethod

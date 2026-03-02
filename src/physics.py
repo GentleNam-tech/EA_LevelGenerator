@@ -133,47 +133,35 @@ class PhysikEngine:
         return None
 
     def ist_sprung_frei(self, start: Position, ziel: Position) -> bool:
-       # pruefung ob Linie zwischen start und Ziel frei ist
-       # Inspiration: https://deepnight.net/tutorial/bresenham-magic-raycasting-line-of-sight-pathfinding/
-        x0, y0 = start.x, start.y
-        x1, y1 = ziel.x, ziel.y
+        # pruefung ob Linie zwischen start und Ziel frei ist
+        # Inspiration: https://studyflix.de/mathematik/lineare-interpolation-3767
+        dx = ziel.x - start.x
+        dy = ziel.y - start.y
 
-        dx = abs(x1 - x0)
-        dy = abs(y1 - y0)
+        schritte = max(abs(dx), abs(dy))
 
-        x = x0
-        y = y0
+        if schritte == 0:
+            return True
 
-        x_step = 1 if x1 > x0 else -1
-        y_step = 1 if y1 > y0 else -1
+        for i in range(1, schritte + 1):
+            t = i / schritte
+            zwischen_x = int(start.x + dx * t)
+            zwischen_y = int(start.y + dy * t)
 
-        if dx > dy:
-            error = dx / 2.0
+            if not self.grid.ist_im_grid(zwischen_x, zwischen_y):
+                return False
 
-            while x != x1:
-                x += x_step
-                error -= dy
+            if self.grid.ist_solid(zwischen_x, zwischen_y):
+                return False
 
-                if error < 0:
-                    y += y_step
-                    error += dx
+            # Pruefen ob KopfKollision während des Sprunges und beim start da ist
+            if self.grid.ist_im_grid(zwischen_x, start.y - 1):
+                if self.grid.ist_solid(zwischen_x, start.y - 1):
+                    return False
 
-                if not (x == x1 and y == y1):
-                    if self.grid.ist_solid(x, y):
-                        return False
-        else:
-            error = dy / 2.0
-
-            while y != y1:
-                y += y_step
-                error -= dx
-
-                if error < 0:
-                    x += x_step
-                    error += dy
-
-                if not (x == x1 and y == y1):
-                    if self.grid.ist_solid(x, y):
+            if zwischen_y > 0:
+                if self.grid.ist_im_grid(zwischen_x, zwischen_y - 1):
+                    if self.grid.ist_solid(zwischen_x, zwischen_y - 1):
                         return False
         return True
 
@@ -184,7 +172,7 @@ class PhysikEngine:
         sprung_ziele = []
 
         for richtung in [LINKS, RECHTS]:
-            # am anfang von 0- sprung hoehe, aber fall sollte auch betrachtet werden, hoher fall sollte aber vermieden werden
+            # am anfang von 0 - sprung hoehe, aber fall sollte auch betrachtet werden, hoher fall sollte aber vermieden werden
             for hoehe in range(-3, SPRUNG_HOEHE + 1):
                 ziel = self.berechne_sprung(von, richtung, hoehe)
                 if ziel:
@@ -233,4 +221,3 @@ class PhysikEngine:
                 bewegungen.append(Bewegung(start=von, ziel=fall_ziel, typ=BewegungTyp.FALLEN, kosten=FALLKOSTEN))
 
         return bewegungen
-
