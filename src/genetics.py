@@ -14,7 +14,8 @@ PLATTFORM_MUTATION = 0.3
 
 class GeneticAlgorithm:
     # erste Paraneter values hiervon inspierert https://www.woodruff.dev/day-31-best-practices-for-tuning-genetic-algorithm-parameters/
-    def __init__(self, population_size: int = 50, crossover_wahrscheinlichkeit: float = 0.7, mutation_wahrscheinlichkeit: float = 0.1, elite: int = 2,
+    def __init__(self, population_size: int = 50, crossover_wahrscheinlichkeit: float = 0.7,
+                 mutation_wahrscheinlichkeit: float = 0.1, elite: int = 2,
                  breite: int = 20, hoehe: int = 10):
         self.population_size = population_size
         self.crossover_wahrscheinlichkeit = crossover_wahrscheinlichkeit
@@ -63,14 +64,15 @@ class GeneticAlgorithm:
     def update_statistiken(self):
         beste = max(self.fitnesses)
         durchschnitt = sum(self.fitnesses) / len(self.fitnesses)
-
-        self.beste_fitness_generation.append(beste)
         self.durchschnitt_fitness_generation.append(durchschnitt)
 
         if beste > self.beste_fitness:
             self.beste_fitness = beste
             beste_index = self.fitnesses.index(beste)
             self.best_level = self.population[beste_index].copy()
+            self.beste_fitness_generation.append(beste)
+        else:
+            self.beste_fitness_generation.append(self.beste_fitness)
 
     def selektiere(self) -> Tuple[np.ndarray, np.ndarray]:
         # https://www.baeldung.com/cs/ga-tournament-selection#bd-the-algorithm
@@ -176,18 +178,18 @@ class GeneticAlgorithm:
 
     def evolution(self, generationen: int, fitness_evaluator: SimpleFitness, verbose: bool = True):
         # print methode wurde generiert mit Copilot
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"STARTE EVOLUTION")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Generationen: {generationen}")
         print(f"Population: {self.population_size}")
         print(f"Crossover-Rate: {self.crossover_wahrscheinlichkeit}")
         print(f"Mutation-Rate: {self.mutation_wahrscheinlichkeit}")
-        print(f"{'='*60}\n")
+        print(f"{'=' * 60}\n")
 
         for gen in range(generationen):
             if verbose:
-                print(f"\nGeneration {gen+1}/{generationen}")
+                print(f"\nGeneration {gen + 1}/{generationen}")
 
             # Evaluiere
             self.evaluiere_population(fitness_evaluator)
@@ -203,9 +205,9 @@ class GeneticAlgorithm:
             if gen < generationen - 1:
                 self.next_generation()
 
-        print(f"\n{'='*60}")
+        print(f"\n{'=' * 60}")
         print(f"EVOLUTION ABGESCHLOSSEN")
-        print(f"{'='*60}")
+        print(f"{'=' * 60}")
         print(f"Beste Fitness: {self.beste_fitness:.2f}")
         print(f"Beste Generation: {self.beste_fitness_generation.index(self.beste_fitness) + 1}")
 

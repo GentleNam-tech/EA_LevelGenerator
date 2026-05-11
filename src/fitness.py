@@ -34,7 +34,7 @@ class SimpleFitness:
 
 
 class Fitness:
-    def __init__(self, gewicht_loesbarkeit: float = 1000.0, gewicht_schwierigkeit: float = 3.0,
+    def __init__(self, gewicht_loesbarkeit: float = 1000.0, gewicht_schwierigkeit: float = 5.0,
                  gewicht_plattformen: float = 2.0):
         self.gewicht_loesbarkeit = gewicht_loesbarkeit
         self.gewicht_schwierigkeit = gewicht_schwierigkeit
@@ -42,11 +42,13 @@ class Fitness:
 
         self.anzahl_level = 0
         self.anzahl_loesbar = 0
+        self.gesamt_evaluierte_nodes = 0
 
     def berechne_fitness(self, grid: Grid) -> float:
         self.anzahl_level += 1
         autoplayer = Autoplayer(grid)
         loesbar = autoplayer.ist_level_loesbar()
+        self.gesamt_evaluierte_nodes += autoplayer.anzahl_evaluierte_nodes
         if not loesbar:
             return -50
 
@@ -59,15 +61,13 @@ class Fitness:
         plattform_nutzung = self.berechne_plattform(grid, pfad)
 
         fitness = loesbarkeit + schwierigkeit + plattform_nutzung
-
         return fitness
 
     def berechne_schwierigkeit(self, statistik: Dict) -> float:
         # Da Sprungkosten teuer ist, ist jeder Sprung auch ein Höhenunterschied des Levels -> Wenn möglich wird gelaufen, daher keine Vertikalitätscheck
         schwierigkeit = 0.0
-        schwierigkeit += statistik.get('anzahl_spruenge', 0) * 3.0
-        schwierigkeit += statistik.get('pfad_laenge', 0) * 3.0
-
+        schwierigkeit += statistik.get('anzahl_spruenge', 0) * 10.0
+        schwierigkeit += statistik.get('pfad_laenge', 0) * 2.0
         return schwierigkeit * self.gewicht_schwierigkeit
 
     def berechne_plattform(self, grid: Grid, pfad: Pfad) -> float:
@@ -103,9 +103,10 @@ class Fitness:
         nutzungs_ratio = genutzte_plattformen / len(plattformen)
         isolations_strafe = isolierte_plattformen / len(plattformen)
         score = (nutzungs_ratio * 100.0 - isolations_strafe * 50.0)
-
         return max(0.0, score) * self.gewicht_plattformen
 
     def get_statistiken(self) -> Dict:
         return {'anzahl_level': self.anzahl_level, 'anzahl_loesbare': self.anzahl_loesbar,
-                'loesbarkeits_rate': (self.anzahl_loesbar / self.anzahl_level)}
+                'loesbarkeits_rate': (self.anzahl_loesbar / self.anzahl_level),
+                'durchschnitt_evaluierte_nodes': (self.gesamt_evaluierte_nodes / self.anzahl_level
+                                                  if self.anzahl_level > 0 else 0)}

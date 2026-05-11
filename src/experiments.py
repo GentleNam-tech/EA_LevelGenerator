@@ -67,9 +67,10 @@ class Experiment:
         fitness_verlauf = np.mean(beste_fitness_verlauf, axis=0).tolist()
         durchschnitt_verlauf = np.mean(alle_verlaeufe, axis=0).tolist()
         std_verlauf = np.std(alle_verlaeufe, axis=0).tolist()
-        stagnationen = [r['konvergenz']['keine_verbesserung_seit_gen'] for r in runs]
         bester_run = beste_fitness_werte.index(max(beste_fitness_werte))
         zwischen_level = [r['bestes_level'] for r in runs[::10]]
+        loesbarkeits_raten = [r['evaluator_stats']['loesbarkeits_rate'] for r in runs]
+        evaluierte_nodes = [r['evaluator_stats']['durchschnitt_evaluierte_nodes'] for r in runs]
 
         return {
             'name': name,
@@ -84,7 +85,8 @@ class Experiment:
             'bestes_level': runs[bester_run]['bestes_level'],
             'zwischen_level': zwischen_level,
             'durchschnittliche_dauer': np.mean([r['dauer_sekunden'] for r in runs]),
-            'mittlere_stagnation': float(np.mean(stagnationen))
+            'loesbarkeits_rate': float(np.mean(loesbarkeits_raten)),
+            'durchschnitt_evaluierte_nodes': float(np.mean(evaluierte_nodes))
         }
 
     def analysiere_konvergenz(self, fitness_verlauf: List[float], epsilon: float = 1e-9) -> Dict:
@@ -123,8 +125,8 @@ class Experiment:
                 'elite': 2
             },
             fitness_config=None,
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
     def experiment_kleine_population(self):
         return self.execute_experiments(
@@ -140,8 +142,8 @@ class Experiment:
                 'gewicht_schwierigkeit': 5.0,
                 'gewicht_plattformen': 2.0
             },
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
     def experiment_hohe_schwierigkeit(self):
         return self.execute_experiments(
@@ -154,11 +156,11 @@ class Experiment:
             },
             fitness_config={
                 'gewicht_loesbarkeit': 1000.0,
-                'gewicht_schwierigkeit': 20.0,
+                'gewicht_schwierigkeit': 10.0,
                 'gewicht_plattformen': 2.0
             },
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
 
     def experiment_nur_loesbarkeit(self):
@@ -175,8 +177,8 @@ class Experiment:
                 'gewicht_schwierigkeit': 0.0,
                 'gewicht_plattformen': 0.0
             },
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
 
     def experiment_baseline(self):
@@ -193,8 +195,8 @@ class Experiment:
                 'gewicht_schwierigkeit': 5.0,
                 'gewicht_plattformen': 2.0
             },
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
 
     def experiment_hohe_mutation(self):
@@ -211,8 +213,8 @@ class Experiment:
                 'gewicht_schwierigkeit': 5.0,
                 'gewicht_plattformen': 2.0
             },
-            generationen=50,
-            wiederholungen=3
+            generationen=100,
+            wiederholungen=10
         )
 
     def exportiere_csv(self, filename: str = "experiment_ergebnisse.csv"):
@@ -242,7 +244,8 @@ class Experiment:
                 'Beste_Fitness_Std',
                 'Beste_Fitness_Max',
                 'Dauer_Sekunden',
-                'Konvergenz'
+                'Loesbarkeits_rate'
+                'Durchschnitt_Evaluierte_Nodes'
             ])
 
             # Daten
@@ -257,7 +260,8 @@ class Experiment:
                     f"{exp['beste_fitness_std']:.2f}",
                     f"{exp['beste_fitness_max']:.2f}",
                     f"{exp['durchschnittliche_dauer']:.2f}",
-                    f"{exp['mittlere_stagnation']:.2f}"
+                    f"{exp['loesbarkeits_rate']:.1%}",
+                    f"{exp['durchschnitt_evaluierte_nodes']:.1f}"
                 ])
 
         print(f"\n✅ CSV exportiert: {filepath}")
@@ -372,33 +376,6 @@ class Experiment:
         print(f"✅ Beste Level gespeichert in: {self.output}")
         return best_level
 
-    def speichere_zwischen_level(self):
-        for i, exp in enumerate(self.all_experiments):
-            name = exp['name']
-            level_list = exp['zwischen_level']
-            for j in range(len(level_list)):
-                filepath = os.path.join(self.output, f"zwischen_level_{name}_{j}.txt")
-                level = level_list[j]
-                zwischen_level = LevelBuilder.matrix_grid(level)
-                with open(filepath, 'w') as f:
-                    f.write(f"Beste Fitness: {exp['beste_fitness_max']:.2f}\n\n")
-                    for y in range(zwischen_level.hoehe):
-                        for x in range(zwischen_level.breite):
-                            tile = zwischen_level.get_tile(x, y)
-                            if tile == 0:
-                                f.write('.')
-                            elif tile == 1:
-                                f.write('#')
-                            elif tile == 2:
-                                f.write('=')
-                            elif tile == 3:
-                                f.write('S')
-                            elif tile == 4:
-                                f.write('Z')
-                        f.write('\n')
-
-        print(f"✅ Zwischen Level gespeichert in: {self.output}")
-
     def drucke_zusammenfassung(self):
         """Druckt Zusammenfassung aller Experimente."""
         print(f"\n{'=' * 70}")
@@ -424,7 +401,6 @@ def fuehre_alle_experimente_aus(output: str = "experiment_results"):
     print("=" * 70)
 
     # Experimente durchführen
-    runner.experiment_simple()
     runner.experiment_baseline()
     runner.experiment_nur_loesbarkeit()
     runner.experiment_hohe_schwierigkeit()
@@ -440,16 +416,12 @@ def fuehre_alle_experimente_aus(output: str = "experiment_results"):
     runner.exportiere_fitness_verlauf_csv()
     runner.exportiere_beste_fitness_verlauf_csv()
     runner.exportiere_std_verlauf_csv()
-    best_level = runner.speichere_beste_level()
-    runner.speichere_zwischen_level()
+    runner.speichere_beste_level()
     runner.drucke_zusammenfassung()
-
-    visualizer = GridVisualizer(best_level)
-    visualizer.run()
 
     print("\n✅ Alle Experimente abgeschlossen!")
     print(f"📁 Ergebnisse in: {runner.output}")
 
 
 if __name__ == "__main__":
-    fuehre_alle_experimente_aus("all_experiments")
+    fuehre_alle_experimente_aus("generations150")

@@ -92,7 +92,7 @@ class PlotCreator:
     def plot_best_fitness_verlaeufe(
             self,
             csv_file: str = "beste_fitness_verlaeufe.csv",
-            output_file: str = "fitness_evolution.png"
+            output_file: str = "beste_fitness_evolution.png"
     ):
         """
         Plottet Fitness-Verläufe über Generationen.
@@ -150,7 +150,7 @@ class PlotCreator:
     def plot_std_verlaeufe(
             self,
             csv_file: str = "std_verlaeufe.csv",
-            output_file: str = "fitness_evolution.png"
+            output_file: str = "std_evolution.png"
     ):
         """
         Plottet Fitness-Verläufe über Generationen.
@@ -261,6 +261,8 @@ class PlotCreator:
         print("ERSTELLE PLOTS")
         print("=" * 60 + "\n")
 
+        self.plot_best_fitness_verlaeufe()
+        self.plot_std_verlaeufe()
         self.plot_fitness_verlaeufe()
         self.plot_vergleich_balken()
 
@@ -281,4 +283,4 @@ def erstelle_plots(results_dir: str = "experiment_results"):
 
 if __name__ == "__main__":
     # Erstelle Plots aus test_results
-    erstelle_plots("all_experiments")
+    erstelle_plots("generations150")

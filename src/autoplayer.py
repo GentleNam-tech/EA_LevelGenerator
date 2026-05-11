@@ -90,7 +90,7 @@ class Autoplayer:
 
         g_kosten_map = {start: 0}
 
-        start_node = ANode(position=start, g_kosten=0, h_kosten=start.manhattan_distanz_zu(ziel))
+        start_node = ANode(position=start, g_kosten=0, h_kosten=start.heuristik(ziel))
         heapq.heappush(open_list, start_node)
 
         iterationen = 0
@@ -134,12 +134,11 @@ class Autoplayer:
         for bewegung in moegliche_bewegungen:
             neue_g_kosten = current.g_kosten + bewegung.kosten
 
-            h_kosten = bewegung.ziel.manhattan_distanz_zu(ziel)
+            h_kosten = bewegung.ziel.heuristik(ziel)
 
             nachbar = ANode(position=bewegung.ziel, g_kosten=neue_g_kosten, h_kosten=h_kosten, parent=current,
                             bewegung=bewegung)
             nachbar_nodes.append(nachbar)
-
         return nachbar_nodes
 
     def rekonstruiere_pfad(self, ziel_node: ANode) -> Pfad:
@@ -155,7 +154,6 @@ class Autoplayer:
 
         positionen.reverse()
         bewegungen.reverse()
-
         return Pfad(positionen, bewegungen)
 
     def berechne_pfad_statistiken(self, pfad: Optional[Pfad] = None) -> dict:

@@ -48,6 +48,15 @@ class Position:
         # https://www.reddit.com/r/gamedev/comments/z2hpv/pathfinding_in_a_2d_platformer/
         return abs(self.x - andere.x) + abs(self.y - andere.y)
 
+    def heuristik(self, nach: 'Position') -> float:
+        # Sollte die minimale Sprunganzahl nehmen
+        dx = abs(nach.x - self.x)
+        dy = abs(nach.y - self.y)
+        spruenge_horizontal = dx / SPRUNG_WEITE
+        spruenge_vertikal = dy / SPRUNG_HOEHE
+        min_spruenge = max(spruenge_horizontal, spruenge_vertikal)
+
+        return min_spruenge * SPRINGKOSTEN
 
 class Bewegung:
     def __init__(self, start: Position, ziel: Position, typ: BewegungTyp, kosten: int = 1):
@@ -88,25 +97,20 @@ class PhysikEngine:
 
         if not self.grid.ist_im_grid(ziel.x, ziel.y):
             return None
-
         if self.grid.ist_solid(ziel.x, ziel.y):
             return None
-
         if not self.grid.hat_boden_darunter(ziel.x, ziel.y):
             return None
-
         return ziel
 
     def berechne_sprung(self, start: Position, richtung: int, ziel_hoehe: int) -> Optional[Position]:
         # berechnet alle möglichen Spruenge von eine Position bis zu einer Position
         if not self.steht_auf_boden(start):
             return None
-
         if ziel_hoehe > SPRUNG_HOEHE:
             return None
 
         moegliche_ziele = []
-
         for horizontale_distanz in range(1, SPRUNG_WEITE + 1):
             ziel_x = start.x + (richtung * horizontale_distanz)
             ziel_y = start.y - ziel_hoehe
@@ -115,13 +119,10 @@ class PhysikEngine:
             # wenn nicht im grid, solide, kein Boden und Hindernisse im Sprung dann naechster Sprung
             if not self.grid.ist_im_grid(ziel_x, ziel_y):
                 continue
-
             if self.grid.ist_solid(ziel_x, ziel_y):
                 continue
-
             if not self.grid.hat_boden_darunter(ziel_x, ziel_y):
                 continue
-
             if self.ist_sprung_frei(start, ziel_pos):
                 moegliche_ziele.append((ziel_pos, horizontale_distanz))
 
@@ -129,7 +130,6 @@ class PhysikEngine:
             # der weiteste Sprung wird genommen der moeglich ist
             moegliche_ziele.sort(key=lambda x: x[1], reverse=True)
             return moegliche_ziele[0][0]
-
         return None
 
     def ist_sprung_frei(self, start: Position, ziel: Position) -> bool:
@@ -137,12 +137,12 @@ class PhysikEngine:
         # Inspiration: https://studyflix.de/mathematik/lineare-interpolation-3767
         dx = ziel.x - start.x
         dy = ziel.y - start.y
-
         schritte = max(abs(dx), abs(dy))
 
         if schritte == 0:
             return True
 
+        apex_y = min(start.y, ziel.y) - SPRUNG_HOEHE
         for i in range(1, schritte + 1):
             t = i / schritte
             zwischen_x = int(start.x + dx * t)
@@ -150,15 +150,11 @@ class PhysikEngine:
 
             if not self.grid.ist_im_grid(zwischen_x, zwischen_y):
                 return False
-
             if self.grid.ist_solid(zwischen_x, zwischen_y):
                 return False
-
-            # Pruefen ob KopfKollision während des Sprunges und beim start da ist
-            if self.grid.ist_im_grid(zwischen_x, start.y - 1):
-                if self.grid.ist_solid(zwischen_x, start.y - 1):
+            for y in range(apex_y, zwischen_y):
+                if self.grid.ist_im_grid(zwischen_x, y) and self.grid.ist_solid(zwischen_x, y):
                     return False
-
             if zwischen_y > 0:
                 if self.grid.ist_im_grid(zwischen_x, zwischen_y - 1):
                     if self.grid.ist_solid(zwischen_x, zwischen_y - 1):
@@ -170,30 +166,25 @@ class PhysikEngine:
             return []
 
         sprung_ziele = []
-
         for richtung in [LINKS, RECHTS]:
             # am anfang von 0 - sprung hoehe, aber fall sollte auch betrachtet werden, hoher fall sollte aber vermieden werden
             for hoehe in range(-3, SPRUNG_HOEHE + 1):
                 ziel = self.berechne_sprung(von, richtung, hoehe)
                 if ziel:
                     sprung_ziele.append(ziel)
-
         return sprung_ziele
 
     def berechne_fall_position(self, von: Position) -> Optional[Position]:
         # berechnet Fall, von 1 bis y grid max
         if self.steht_auf_boden(von):
             return von
-
         aktuelle_y = von.y
 
         for fall_distanz in range(1, FALL_DISTANZ_MAX + 1):
             naechste_y = aktuelle_y + fall_distanz
             naechste_pos = Position(von.x, naechste_y)
-
             if not self.grid.ist_im_grid(von.x, naechste_y):
                 return None
-
             if self.grid.hat_boden_darunter(von.x, naechste_y):
                 if not self.grid.ist_solid(von.x, naechste_y):
                     return naechste_pos
@@ -209,15 +200,12 @@ class PhysikEngine:
             ziel = self.kann_laufen(von, richtung)
             if ziel:
                 bewegungen.append(Bewegung(start=von, ziel=ziel, typ=BewegungTyp.LAUFEN, kosten=LAUFKOSTEN))
-
         if self.steht_auf_boden(von):
             sprung_ziele = self.finde_alle_sprung_ziele(von)
             for ziel in sprung_ziele:
                 bewegungen.append(Bewegung(start=von, ziel=ziel, typ=BewegungTyp.SPRINGEN, kosten=SPRINGKOSTEN))
-
         if not self.steht_auf_boden(von):
             fall_ziel = self.berechne_fall_position(von)
             if fall_ziel:
                 bewegungen.append(Bewegung(start=von, ziel=fall_ziel, typ=BewegungTyp.FALLEN, kosten=FALLKOSTEN))
-
         return bewegungen

@@ -51,7 +51,7 @@ class Grid:
     def get_start(self) -> Optional[Tuple[int, int]]:
         # Hole Start position wenne existiert
         positionen = np.argwhere(self.tiles == START)
-        if len(positionen == 1):
+        if len(positionen >= 1):
             y, x = positionen[0]
             return x, y
         return None
@@ -59,7 +59,7 @@ class Grid:
     def get_ziel(self) -> Optional[Tuple[int, int]]:
         # Hole Ziel position wenne existiert
         positionen = np.argwhere(self.tiles == ZIEL)
-        if len(positionen == 1):
+        if len(positionen >= 1):
             y, x = positionen[0]
             return x, y
         return None
@@ -132,7 +132,6 @@ class LevelBuilder:
         g.set_tile(19, 2, PLATTFORM)
 
         g.set_tile(18, 1, ZIEL)
-
         return g
 
     @staticmethod
@@ -160,7 +159,6 @@ class LevelBuilder:
         g.set_tile(19, 4, PLATTFORM)
 
         g.set_tile(18, 3, ZIEL)
-
         return g
 
     @staticmethod
@@ -192,7 +190,6 @@ class LevelBuilder:
         g.set_tile(19, 8, PLATTFORM)
 
         g.set_tile(18, 7, ZIEL)
-
         return g
 
     @staticmethod
@@ -209,13 +206,11 @@ class LevelBuilder:
         for x in range(2, breite - 2):
             if np.random.random() < luecken_wahrscheinlichkeit:
                 g.set_tile(x, hoehe - 1, LUFT)
-
         g.set_tile(1, hoehe - 2, START)
 
         ziel_y = np.random.randint(1, hoehe - 2)
         g.set_tile(breite - 2, ziel_y, ZIEL)
         g.set_tile(breite - 2, ziel_y + 1, PLATTFORM)
-
         return g
 
     @staticmethod
@@ -223,7 +218,6 @@ class LevelBuilder:
         hoehe, breite = matrix.shape
         g = Grid(breite, hoehe)
         g.tiles = matrix.copy().astype(int)
-
         return g
 
     @staticmethod
@@ -255,7 +249,6 @@ class LevelBuilder:
                     g.set_tile(x, y, LUFT)
                 else:
                     g.set_tile(x, y, LUFT)
-
         return g
 
 class LevelValidator:
@@ -272,8 +265,6 @@ class LevelValidator:
             fehler.append("Kein Start")
         if ziel is None:
             fehler.append("Kein Ziel")
-
         if start == ziel:
             fehler.append("Start gleich Ziel")
-
         return len(fehler) == 0, fehler
