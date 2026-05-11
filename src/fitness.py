@@ -50,7 +50,7 @@ class Fitness:
         loesbar = autoplayer.ist_level_loesbar()
         self.gesamt_evaluierte_nodes += autoplayer.anzahl_evaluierte_nodes
         if not loesbar:
-            return -50
+            return 0
 
         self.anzahl_loesbar += 1
         pfad = autoplayer.letzter_pfad
